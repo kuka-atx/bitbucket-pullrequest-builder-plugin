@@ -7,6 +7,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class BitbucketPullRequestResponseValueRepositoryRepository {
     private String fullName;
     private String name;
+    private String scm;
 
     @JsonProperty("full_name")
     public String getFullName() {
@@ -25,6 +26,10 @@ public class BitbucketPullRequestResponseValueRepositoryRepository {
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getScm() { return this.scm; }
+
+    public void setScm(String scm) { this.scm = scm; }
 
     public String getOwnerName() {
         if (this.fullName != null) {

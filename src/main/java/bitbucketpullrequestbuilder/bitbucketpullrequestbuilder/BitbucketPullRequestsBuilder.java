@@ -3,7 +3,10 @@ package bitbucketpullrequestbuilder.bitbucketpullrequestbuilder;
 import bitbucketpullrequestbuilder.bitbucketpullrequestbuilder.bitbucket.BitbucketPullRequestResponseValue;
 import hudson.model.AbstractProject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.logging.Logger;
 
 /**
@@ -29,6 +32,11 @@ public class BitbucketPullRequestsBuilder {
         this.repository.init();
         Collection<BitbucketPullRequestResponseValue> targetPullRequests = this.repository.getTargetPullRequests();
         this.repository.addFutureBuildTasks(targetPullRequests);
+    }
+
+    public void runPullRequestBuild(BitbucketPullRequestResponseValue pullRequest) {
+        this.repository.init();
+        this.repository.addFutureBuildTasks(Collections.singletonList(pullRequest));
     }
 
     public BitbucketPullRequestsBuilder setupBuilder() {

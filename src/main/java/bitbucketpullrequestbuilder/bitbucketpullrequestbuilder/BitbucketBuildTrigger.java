@@ -23,7 +23,6 @@ import java.util.logging.Logger;
 public class BitbucketBuildTrigger extends Trigger<AbstractProject<?, ?>> {
     private static final Logger logger = Logger.getLogger(BitbucketBuildTrigger.class.getName());
     private final String projectPath;
-    private final String cron;
     private final String username;
     private final String password;
     private final String repositoryOwner;
@@ -40,7 +39,6 @@ public class BitbucketBuildTrigger extends Trigger<AbstractProject<?, ?>> {
     @DataBoundConstructor
     public BitbucketBuildTrigger(
             String projectPath,
-            String cron,
             String username,
             String password,
             String repositoryOwner,
@@ -48,10 +46,8 @@ public class BitbucketBuildTrigger extends Trigger<AbstractProject<?, ?>> {
             String ciSkipPhrases,
             boolean checkDestinationCommit,
             boolean approveIfSuccess
-            ) throws ANTLRException {
-        super(cron);
+            ) {
         this.projectPath = projectPath;
-        this.cron = cron;
         this.username = username;
         this.password = password;
         this.repositoryOwner = repositoryOwner;
@@ -63,10 +59,6 @@ public class BitbucketBuildTrigger extends Trigger<AbstractProject<?, ?>> {
 
     public String getProjectPath() {
         return this.projectPath;
-    }
-
-    public String getCron() {
-        return this.cron;
     }
 
     public String getUsername() {
@@ -143,21 +135,6 @@ public class BitbucketBuildTrigger extends Trigger<AbstractProject<?, ?>> {
             }
         }
         return values;
-    }
-
-    @Override
-    public void run() {
-        if(this.getBuilder().getProject().isDisabled()) {
-            logger.info("Build Skip.");
-        } else {
-            this.bitbucketPullRequestsBuilder.run();
-        }
-        this.getDescriptor().save();
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
     }
 
     public static final class BitbucketBuildTriggerDescriptor extends TriggerDescriptor {

@@ -33,6 +33,7 @@ public class BitbucketRepository {
     private BitbucketPullRequestsBuilder builder;
     private BitbucketBuildTrigger trigger;
     private BitbucketApiClient client;
+    private Boolean initialized = false;
 
     public BitbucketRepository(String projectPath, BitbucketPullRequestsBuilder builder) {
         this.projectPath = projectPath;
@@ -40,12 +41,15 @@ public class BitbucketRepository {
     }
 
     public void init() {
-        trigger = this.builder.getTrigger();
-        client = new BitbucketApiClient(
-                trigger.getUsername(),
-                trigger.getPassword(),
-                trigger.getRepositoryOwner(),
-                trigger.getRepositoryName());
+        if (!initialized) {
+            trigger = this.builder.getTrigger();
+            client = new BitbucketApiClient(
+                    trigger.getUsername(),
+                    trigger.getPassword(),
+                    trigger.getRepositoryOwner(),
+                    trigger.getRepositoryName());
+            initialized = true;
+        }
     }
 
     public Collection<BitbucketPullRequestResponseValue> getTargetPullRequests() {
@@ -112,7 +116,7 @@ public class BitbucketRepository {
         this.client.postPullRequestApproval(pullRequestId);
     }
 
-    private boolean isBuildTarget(BitbucketPullRequestResponseValue pullRequest) {
+    public boolean isBuildTarget(BitbucketPullRequestResponseValue pullRequest) {
 
         boolean shouldBuild = true;
         if (pullRequest.getState() != null && pullRequest.getState().equals("OPEN")) {
