@@ -1,6 +1,5 @@
 package bitbucketpullrequestbuilder.bitbucketpullrequestbuilder;
 
-import antlr.ANTLRException;
 import hudson.Extension;
 import hudson.model.*;
 import hudson.model.queue.QueueTaskFuture;

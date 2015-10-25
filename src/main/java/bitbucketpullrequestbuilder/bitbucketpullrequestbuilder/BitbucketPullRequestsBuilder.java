@@ -3,9 +3,6 @@ package bitbucketpullrequestbuilder.bitbucketpullrequestbuilder;
 import bitbucketpullrequestbuilder.bitbucketpullrequestbuilder.bitbucket.BitbucketPullRequestResponseValue;
 import hudson.model.AbstractProject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.logging.Logger;
 
