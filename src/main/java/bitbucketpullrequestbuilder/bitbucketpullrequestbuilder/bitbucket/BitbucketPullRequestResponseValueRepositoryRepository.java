@@ -8,6 +8,15 @@ public class BitbucketPullRequestResponseValueRepositoryRepository {
     private String fullName;
     private String name;
     private String scm;
+    private BitbucketPullRequestResponseValueLinks links;
+
+    public BitbucketPullRequestResponseValueLinks getLinks() {
+        return links;
+    }
+
+    public void setLinks(BitbucketPullRequestResponseValueLinks links) {
+        this.links = links;
+    }
 
     @JsonProperty("full_name")
     public String getFullName() {

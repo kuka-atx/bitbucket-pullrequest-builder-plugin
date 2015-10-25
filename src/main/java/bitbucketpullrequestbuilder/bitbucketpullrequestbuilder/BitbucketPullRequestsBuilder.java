@@ -23,17 +23,6 @@ public class BitbucketPullRequestsBuilder {
         return new BitbucketPullRequestsBuilder();
     }
 
-    public void stop() {
-        // TODO?
-    }
-
-    public void run() {
-        logger.info("Build Start.");
-        this.repository.init();
-        Collection<BitbucketPullRequestResponseValue> targetPullRequests = this.repository.getTargetPullRequests();
-        this.repository.addFutureBuildTasks(targetPullRequests);
-    }
-
     public void runPullRequestBuild(BitbucketPullRequestResponseValue pullRequest) {
         this.repository.init();
         this.repository.addFutureBuildTasks(Collections.singletonList(pullRequest));
@@ -43,7 +32,7 @@ public class BitbucketPullRequestsBuilder {
         if (this.project == null || this.trigger == null) {
             throw new IllegalStateException();
         }
-        this.repository = new BitbucketRepository(this.trigger.getProjectPath(), this);
+        this.repository = new BitbucketRepository(this);
         this.builds = new BitbucketBuilds(this.trigger, this.repository);
         return this;
     }

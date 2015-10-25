@@ -6,6 +6,8 @@ import bitbucketpullrequestbuilder.bitbucketpullrequestbuilder.bitbucket.Bitbuck
 import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.UnprotectedRootAction;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.GitStatus;
 import hudson.scm.SCM;
 import hudson.triggers.Trigger;
 import jenkins.model.Jenkins;
@@ -14,11 +16,13 @@ import jenkins.triggers.SCMTriggerItem;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,13 +49,6 @@ public class BitbucketWebhookListener  implements UnprotectedRootAction {
     public void doIndex(StaplerRequest req) throws IOException {
         String body = IOUtils.toString(req.getInputStream());
         if (!body.isEmpty() && req.getRequestURI().contains("/" + BITBUCKET_HOOK_URL)) {
-
-            String contentType = req.getContentType();
-
-            if (contentType != null && contentType.startsWith("application/x-www-form-urlencoded")) {
-                body = URLDecoder.decode(body);
-            }
-
             if (body.startsWith("payload=")) {
                 body = body.substring(8);
             }
@@ -65,12 +62,18 @@ public class BitbucketWebhookListener  implements UnprotectedRootAction {
             }
 
         } else {
-            LOGGER.log(Level.WARNING, "The Jenkins job cannot be triggered. You might not have configured the WebHook correctly on BitBucket !! `http://<JENKINS-URL>/bitbucket-pullrequest`");
+            LOGGER.log(Level.WARNING, "The Jenkins job cannot be triggered. You might not have configured the WebHook correctly on BitBucket `http://<JENKINS-URL>/bitbucket-pullrequest`");
         }
 
     }
 
-    private void triggerAppropriateBuild(HttpServletRequest req, JSONObject payload) {
+    private static boolean isPullRequestCreateOrUpdate(HttpServletRequest req) {
+        return req.getHeader("User-Agent").equalsIgnoreCase("Bitbucket-Webhooks/2.0") &&
+                (req.getHeader("X-Event-Key").equalsIgnoreCase("pullrequest:created") ||
+                        req.getHeader("X-Event-Key").equalsIgnoreCase("pullrequest:updated"));
+    }
+
+    private static void triggerAppropriateBuild(HttpServletRequest req, JSONObject payload) {
         try {
             BitbucketPullRequestResponseValue pullRequest = createPullRequestFromJson(payload);
 
@@ -86,13 +89,15 @@ public class BitbucketWebhookListener  implements UnprotectedRootAction {
         }
     }
 
-    private Collection<BitbucketBuildTrigger> findTriggersMatchingPullRequest(BitbucketPullRequestResponseValue pullRequest) {
+    private static Collection<BitbucketBuildTrigger> findTriggersMatchingPullRequest(BitbucketPullRequestResponseValue pullRequest) {
         List<BitbucketBuildTrigger> triggers = new ArrayList<BitbucketBuildTrigger>();
 
         for (Job<?,?> job : Jenkins.getInstance().getAllItems(Job.class)) {
             if(repositoryMatches(pullRequest, job)) {
                 for (BitbucketBuildTrigger trigger : getBitBucketTriggers(job)) {
-                    triggers.add(trigger);
+                    if (!isSkipBuild(pullRequest.getTitle(), trigger)) {
+                        triggers.add(trigger);
+                    }
                 }
             }
         }
@@ -100,17 +105,31 @@ public class BitbucketWebhookListener  implements UnprotectedRootAction {
         return triggers;
     }
 
-    private Boolean repositoryMatches(BitbucketPullRequestResponseValue pullRequest, Job<?, ?> job) {
-//        SCMTriggerItem item = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(job);
-//        List<SCM> scmTriggered = new ArrayList<SCM>();
-//        URIish gitRemote = new URIish(pullRequest.getDestination().getRepository().get)
-//        for (SCM scmTrigger : item.getSCMs()) {
-//
-//        }
+    private static Boolean repositoryMatches(BitbucketPullRequestResponseValue pullRequest, Job<?, ?> job) {
+        SCMTriggerItem item = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(job);
+
+        try {
+            URIish gitRemote = new URIish(pullRequest.getDestination().getRepository().getLinks().getHtml().getHref());
+            for (SCM scmTrigger : item.getSCMs()) {
+                if (scmTrigger instanceof GitSCM) {
+                    for (RemoteConfig remoteConfig : ((GitSCM) scmTrigger).getRepositories()) {
+                        for (URIish urIish : remoteConfig.getURIs()) {
+                            if (GitStatus.looselyMatches(urIish, gitRemote)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (URISyntaxException e) {
+            LOGGER.log(Level.SEVERE, "Could not parse repository URL: " + e.getMessage());
+            return false;
+        }
+
         return false;
     }
 
-    private Collection<BitbucketBuildTrigger> getBitBucketTriggers(Job<?, ?> job) {
+    private static Collection<BitbucketBuildTrigger> getBitBucketTriggers(Job<?, ?> job) {
         ArrayList<BitbucketBuildTrigger> triggers = new ArrayList<BitbucketBuildTrigger>();
 
         if (job instanceof ParameterizedJobMixIn.ParameterizedJob) {
@@ -128,7 +147,7 @@ public class BitbucketWebhookListener  implements UnprotectedRootAction {
         return triggers;
     }
 
-    private BitbucketPullRequestResponseValue createPullRequestFromJson(JSONObject payload) throws IOException {
+    private static BitbucketPullRequestResponseValue createPullRequestFromJson(JSONObject payload) throws IOException {
         JSONObject pullRequestJson = payload.getJSONObject("pullrequest");
 
         if (pullRequestJson == null) {
@@ -136,14 +155,20 @@ public class BitbucketWebhookListener  implements UnprotectedRootAction {
         }
 
         ObjectMapper mapper = new ObjectMapper();
-        BitbucketPullRequestResponseValue pullRequest = mapper.readValue(pullRequestJson.toString(), BitbucketPullRequestResponseValue.class);
-        return pullRequest;
+        return mapper.readValue(pullRequestJson.toString(), BitbucketPullRequestResponseValue.class);
     }
 
-    private static boolean isPullRequestCreateOrUpdate(HttpServletRequest req) {
-        return req.getHeader("User-Agent").equalsIgnoreCase("Bitbucket-Webhooks/2.0") &&
-                (req.getHeader("X-Event-Key").equalsIgnoreCase("pullrequest:created") ||
-                        req.getHeader("X-Event-Key").equalsIgnoreCase("pullrequest:updated"));
+    private static boolean isSkipBuild(String pullRequestTitle, BitbucketBuildTrigger trigger) {
+        String skipPhrases = trigger.getCiSkipPhrases();
+        if (skipPhrases != null && !"".equals(skipPhrases)) {
+            String[] phrases = skipPhrases.split(",");
+            for(String phrase : phrases) {
+                if (pullRequestTitle.toLowerCase().contains(phrase.trim().toLowerCase())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static final Logger LOGGER = Logger.getLogger(BitbucketWebhookListener.class.getName());

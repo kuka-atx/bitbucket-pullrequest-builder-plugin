@@ -7,4 +7,9 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketPullRequestResponseValueLink {
+    private String href;
+
+    public String getHref() { return this.href; }
+
+    public void setHref(String href) { this.href = href; }
 }
