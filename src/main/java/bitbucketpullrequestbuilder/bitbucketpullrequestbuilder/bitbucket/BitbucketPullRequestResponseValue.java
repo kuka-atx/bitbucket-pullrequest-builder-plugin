@@ -20,6 +20,15 @@ public class BitbucketPullRequestResponseValue {
     private String updatedOn;
     private String mergeCommit;
     private String id;
+    private BitbucketPullRequestResponseValueLinks links;
+
+    public BitbucketPullRequestResponseValueLinks getLinks() {
+        return links;
+    }
+
+    public void setLinks(BitbucketPullRequestResponseValueLinks links) {
+        this.links = links;
+    }
 
     public String getDescription() {
         return description;

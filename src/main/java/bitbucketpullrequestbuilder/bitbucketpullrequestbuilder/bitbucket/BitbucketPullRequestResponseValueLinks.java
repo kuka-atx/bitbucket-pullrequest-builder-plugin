@@ -8,7 +8,6 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketPullRequestResponseValueLinks {
     private BitbucketPullRequestResponseValueLink html;
-    private BitbucketPullRequestResponseValueLink avatar;
     private BitbucketPullRequestResponseValueLink self;
 
     public BitbucketPullRequestResponseValueLink getSelf() {
@@ -17,14 +16,6 @@ public class BitbucketPullRequestResponseValueLinks {
 
     public void setSelf(BitbucketPullRequestResponseValueLink self) {
         this.self = self;
-    }
-
-    public BitbucketPullRequestResponseValueLink getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(BitbucketPullRequestResponseValueLink avatar) {
-        this.avatar = avatar;
     }
 
     public BitbucketPullRequestResponseValueLink getHtml() {

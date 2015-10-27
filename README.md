@@ -7,7 +7,7 @@ This Jenkins plugin builds pull requests from Bitbucket.org and will report the 
 Prerequisites
 ================================
 
-- Jenkins 1.509.4 or higher.
+- Jenkins 1.580.1 or higher.
 - https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin
 
 
@@ -21,17 +21,26 @@ Creating a Job
 - In Branch Specifier, type as bellow
   - */${sourceBranch}
 - Under Build Triggers, check Bitbucket Pull Request Builder
-- In Cron, enter crontab for this job.
-  - ex: * * * * *
 - In Bitbucket BasicAuth Username, write your bitbucket username like jenkins@densan-labs.net
 - In Bitbucket BasicAuth Password, write your password
 - Write RepositoryOwner
 - Write RepositoryName
 - Save to preserve your changes
 
+Configuiring Bitbucket
+======================
+
+ - Select "Settings" (gear icon) for the Bitbucket repository
+ - Click "Webhooks" under "Integrations"
+ - Click "Add webhook"
+ - In the URL blank, enter <JENKINS-URL>/bitbucket-pullrequest/ (for example https://my.jenkins-server.com/bitbucket-pullrequest/).  Do not forget the trailing slash!
+ - Under Triggers, choose "Choose from a full list of triggers."
+ - Select "Created" and "Updated" under "Pull Request."  If you want to use the feature "Rebuild if destination branch changes?" you must also check "Push" under "Repository/"
+
 Merge the Pull Request's Source Branch into the Target Branch Before Building
 ==============================================================================
 You may want Jenkins to attempt to merge your PR before doing the build -- this way it will find conflicts for you automatically.
+
 - Follow the steps above in "Creating a Job"
 - In the "Source Code Management" > "Git" > "Additional Behaviors" section, click "Add" > "Merge Before Building"
 - In "Name of Repository" put "origin" (or, if not using default name, use your remote repository's name. Note: unlike in the main part of the Git Repository config, you cannot leave this item blank for "default".)
