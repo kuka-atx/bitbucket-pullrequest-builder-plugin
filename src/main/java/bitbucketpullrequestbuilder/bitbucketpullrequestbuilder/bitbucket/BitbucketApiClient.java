@@ -48,7 +48,7 @@ public class BitbucketApiClient {
 
     public List<BitbucketPullRequestComment> getPullRequestComments(String commentOwnerName, String commentRepositoryName, String pullRequestId) {
         String response = getRequest(
-            V1_API_BASE_URL + commentOwnerName + "/" + commentRepositoryName + "/pullrequests/" + pullRequestId + "/comments");
+            V2_API_BASE_URL + commentOwnerName + "/" + commentRepositoryName + "/pullrequests/" + pullRequestId + "/comments");
         try {
             return parseCommentJson(response);
         } catch(Exception e) {
@@ -58,14 +58,14 @@ public class BitbucketApiClient {
     }
 
     public void deletePullRequestComment(String pullRequestId, String commentId) {
-        String path = V1_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/" + pullRequestId + "/comments/" + commentId;
+        String path = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/" + pullRequestId + "/comments/" + commentId;
         //https://bitbucket.org/api/1.0/repositories/{accountname}/{repo_slug}/pullrequests/{pull_request_id}/comments/{comment_id}
         deleteRequest(path);
     }
 
 
     public BitbucketPullRequestComment postPullRequestComment(String pullRequestId, String comment) {
-        String path = V1_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/" + pullRequestId + "/comments";
+        String path = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/" + pullRequestId + "/comments";
         try {
             NameValuePair content = new NameValuePair("content", comment);
             String response = postRequest(path, new NameValuePair[]{ content });
