@@ -1,7 +1,7 @@
 package bitbucketpullrequestbuilder.bitbucketpullrequestbuilder;
 
 import bitbucketpullrequestbuilder.bitbucketpullrequestbuilder.bitbucket.BitbucketApiClient;
-import bitbucketpullrequestbuilder.bitbucketpullrequestbuilder.bitbucket.BitbucketPullRequestComment;
+import bitbucketpullrequestbuilder.bitbucketpullrequestbuilder.bitbucket.BitbucketPullRequestAPI2;
 import bitbucketpullrequestbuilder.bitbucketpullrequestbuilder.bitbucket.BitbucketPullRequestResponseValue;
 
 import java.util.Collection;
@@ -15,7 +15,7 @@ public class BitbucketRepository {
     public static final String BUILD_START_MARKER = "[*BuildStarted* **%s**] %s into %s";
     public static final String BUILD_FINISH_MARKER = "[*BuildFinished* **%s**] %s into %s";
 
-    public static final String BUILD_FINISH_SENTENCE = BUILD_FINISH_MARKER + " \n\n **%s** - %s";
+    public static final String BUILD_FINISH_SENTENCE = BUILD_FINISH_MARKER + " \\n\\n **%s** - %s";
 
     public static final String BUILD_SUCCESS_COMMENT =  "SUCCESS";
     public static final String BUILD_FAILURE_COMMENT = "FAILURE";
@@ -44,8 +44,8 @@ public class BitbucketRepository {
             String sourceCommit = pullRequest.getSource().getCommit().getHash();
             String destinationCommit = pullRequest.getDestination().getCommit().getHash();
             String comment = String.format(BUILD_START_MARKER, builder.getProject().getDisplayName(), sourceCommit, destinationCommit);
-            BitbucketPullRequestComment commentResponse = this.client.postPullRequestComment(pullRequest.getId(), comment);
-            return commentResponse.getCommentId().toString();
+            BitbucketPullRequestAPI2.Comment commentResponse = this.client.postPullRequestComment(pullRequest.getId(), comment);
+            return commentResponse.getId().toString();
     }
 
     public void addFutureBuildTasks(Collection<BitbucketPullRequestResponseValue> pullRequests) {

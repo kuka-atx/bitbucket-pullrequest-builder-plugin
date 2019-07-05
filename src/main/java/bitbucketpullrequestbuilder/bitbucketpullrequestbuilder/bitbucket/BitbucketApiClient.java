@@ -5,6 +5,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -64,11 +65,11 @@ public class BitbucketApiClient {
     }
 
 
-    public BitbucketPullRequestComment postPullRequestComment(String pullRequestId, String comment) {
+    public BitbucketPullRequestAPI2.Comment postPullRequestComment(String pullRequestId, String comment) {
         String path = V2_API_BASE_URL + this.owner + "/" + this.repositoryName + "/pullrequests/" + pullRequestId + "/comments";
         try {
-            NameValuePair content = new NameValuePair("content", comment);
-            String response = postRequest(path, new NameValuePair[]{ content });
+            String content = "{\"content\": {\"raw\": \"" + comment+"\"}}";
+            String response = postRequestJSON(path, content);
             return parseSingleCommentJson(response);
 
         } catch (UnsupportedEncodingException e) {
@@ -152,6 +153,24 @@ public class BitbucketApiClient {
         PostMethod httppost = new PostMethod(path);
         httppost.setRequestBody(params);
         client.getParams().setAuthenticationPreemptive(true);
+        String response = handleClientCall(client,httppost);
+
+        return response;
+
+    }
+    private String postRequestJSON(String path, String params) throws UnsupportedEncodingException {
+        HttpClient client = getHttpClient();
+        client.getState().setCredentials(AuthScope.ANY, credentials);
+        PostMethod httppost = new PostMethod(path);
+        httppost.setRequestEntity(new StringRequestEntity(params, "application/json","UTF-8"));
+        client.getParams().setAuthenticationPreemptive(true);
+
+        String response = handleClientCall(client,httppost);
+
+        return response;
+    }
+
+    private String handleClientCall(HttpClient client, PostMethod httppost){
         String response = "";
         try {
             client.executeMethod(httppost);
@@ -163,8 +182,8 @@ public class BitbucketApiClient {
             e.printStackTrace();
         }
         return response;
-
     }
+
 
     private BitbucketPullRequestResponse parsePullRequestJson(String response) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
@@ -183,12 +202,12 @@ public class BitbucketApiClient {
         return parsedResponse;
     }
 
-    private BitbucketPullRequestComment parseSingleCommentJson(String response) throws IOException {
+    private BitbucketPullRequestAPI2.Comment parseSingleCommentJson(String response) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        BitbucketPullRequestComment parsedResponse;
+        BitbucketPullRequestAPI2.Comment parsedResponse;
         parsedResponse = mapper.readValue(
                 response,
-                BitbucketPullRequestComment.class);
+                BitbucketPullRequestAPI2.Comment.class);
         return parsedResponse;
     }
 
